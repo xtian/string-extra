@@ -1,9 +1,9 @@
 {
     "type": "package",
-    "name": "elm-community/string-extra",
+    "name": "xtian/string-extra",
     "summary": "String helper functions for Elm",
     "license": "BSD-3-Clause",
-    "version": "1.4.0",
+    "version": "1.0.0",
     "exposed-modules": [
         "String.Extra"
     ],
