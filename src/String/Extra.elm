@@ -1,47 +1,47 @@
 module String.Extra
     exposing
-        ( toSentenceCase
-        , toTitleCase
+        ( break
+        , camelize
+        , classify
+        , clean
+        , countOccurrences
+        , dasherize
         , decapitalize
+        , ellipsis
+        , ellipsisWith
+        , fromCodePoints
+        , fromFloat
+        , fromInt
+        , humanize
+        , insertAt
+        , isBlank
+        , leftOf
+        , leftOfBack
+        , nonEmpty
+        , pluralize
+        , quote
+        , removeAccents
         , replace
         , replaceSlice
-        , insertAt
-        , break
+        , rightOf
+        , rightOfBack
         , softBreak
-        , clean
-        , isBlank
-        , camelize
-        , underscored
-        , dasherize
-        , classify
-        , humanize
-        , quote
-        , unquote
+        , softEllipsis
+        , softWrap
+        , softWrapWith
+        , stripTags
         , surround
+        , toCodePoints
+        , toSentence
+        , toSentenceCase
+        , toSentenceOxford
+        , toTitleCase
+        , underscored
+        , unindent
+        , unquote
         , unsurround
         , wrap
         , wrapWith
-        , softWrap
-        , softWrapWith
-        , unindent
-        , countOccurrences
-        , ellipsis
-        , softEllipsis
-        , ellipsisWith
-        , toSentence
-        , toSentenceOxford
-        , stripTags
-        , rightOf
-        , leftOf
-        , rightOfBack
-        , leftOfBack
-        , fromInt
-        , fromFloat
-        , toCodePoints
-        , fromCodePoints
-        , pluralize
-        , nonEmpty
-        , removeAccents
         )
 
 {-| Additional functions for working with Strings
@@ -105,12 +105,12 @@ Functions borrowed from the Rails Inflector class
 
 -}
 
-import String exposing (uncons, cons, words, join)
-import Char exposing (toUpper, toLower)
-import Regex exposing (regex, escape, HowMany(..))
-import Maybe exposing (Maybe(..))
-import List
 import Bitwise
+import Char exposing (toLower, toUpper)
+import List
+import Maybe exposing (Maybe(..))
+import Regex exposing (HowMany(..), escape, regex)
+import String exposing (cons, join, uncons, words)
 
 
 {-| Change the case of the first letter of a string to either uppercase or
@@ -120,7 +120,7 @@ function for use in `toSentenceCase` and `decapitalize`.
 changeCase : (Char -> Char) -> String -> String
 changeCase mutator word =
     uncons word
-        |> Maybe.map (\( head, tail ) -> (cons (mutator head) tail))
+        |> Maybe.map (\( head, tail ) -> cons (mutator head) tail)
         |> Maybe.withDefault ""
 
 
@@ -132,7 +132,7 @@ changeCase mutator word =
 -}
 toSentenceCase : String -> String
 toSentenceCase word =
-    changeCase (toUpper) word
+    changeCase toUpper word
 
 
 {-| Decapitalize the first letter of a string.
@@ -143,7 +143,7 @@ toSentenceCase word =
 -}
 decapitalize : String -> String
 decapitalize word =
-    changeCase (toLower) word
+    changeCase toLower word
 
 
 {-| Capitalize the first character of each word in a string.
@@ -158,10 +158,10 @@ toTitleCase ws =
         uppercaseMatch =
             Regex.replace All (regex "\\w+") (.match >> toSentenceCase)
     in
-        ws
-            |> Regex.replace All
-                (regex "^([a-z])|\\s+([a-z])")
-                (.match >> uppercaseMatch)
+    ws
+        |> Regex.replace All
+            (regex "^([a-z])|\\s+([a-z])")
+            (.match >> uppercaseMatch)
 
 
 {-| Replace all occurrences of the search string with the substitution string.
@@ -186,7 +186,7 @@ at the start index but not the one at the end index.
 -}
 replaceSlice : String -> Int -> Int -> String -> String
 replaceSlice substitution start end string =
-    (String.slice 0 start string) ++ substitution ++ (String.slice end (String.length string) string)
+    String.slice 0 start string ++ substitution ++ String.slice end (String.length string) string
 
 
 {-| Insert a substring at the specified index.
@@ -209,6 +209,7 @@ break : Int -> String -> List String
 break width string =
     if width == 0 || string == "" then
         [ string ]
+
     else
         breaker width string []
 
@@ -222,7 +223,7 @@ breaker width string acc =
         _ ->
             breaker width
                 (String.dropLeft width string)
-                ((String.slice 0 width string) :: acc)
+                (String.slice 0 width string :: acc)
 
 
 {-| Break a string into a list of strings of a specified maximum length,
@@ -235,15 +236,16 @@ softBreak : Int -> String -> List String
 softBreak width string =
     if width <= 0 then
         []
+
     else
         string
             |> Regex.find All (softBreakRegexp width)
-            |> List.map (.match)
+            |> List.map .match
 
 
 softBreakRegexp : Int -> Regex.Regex
 softBreakRegexp width =
-    regex <| ".{1," ++ (toString width) ++ "}(\\s+|$)|\\S+?(\\s+|$)"
+    regex <| ".{1," ++ toString width ++ "}(\\s+|$)|\\S+?(\\s+|$)"
 
 
 {-| Trim the whitespace of both sides of the string and compress
@@ -330,9 +332,10 @@ unsurround wrap string =
             length =
                 String.length wrap
         in
-            string
-                |> String.dropLeft length
-                |> String.dropRight length
+        string
+            |> String.dropLeft length
+            |> String.dropRight length
+
     else
         string
 
@@ -510,9 +513,9 @@ unindent multilineSting =
                 |> List.minimum
                 |> Maybe.withDefault 0
     in
-        lines
-            |> List.map (String.dropLeft minLead)
-            |> String.join "\n"
+    lines
+        |> List.map (String.dropLeft minLead)
+        |> String.join "\n"
 
 
 {-| Return the number of occurrences of a substring in another string.
@@ -523,8 +526,9 @@ unindent multilineSting =
 -}
 countOccurrences : String -> String -> Int
 countOccurrences needle haystack =
-    if (String.length needle) == 0 || (String.length haystack) == 0 then
+    if String.length needle == 0 || String.length haystack == 0 then
         0
+
     else
         haystack
             |> String.indexes needle
@@ -548,8 +552,9 @@ ellipsisWith : Int -> String -> String -> String
 ellipsisWith howLong append string =
     if String.length string <= howLong then
         string
+
     else
-        (String.left (howLong - (String.length append)) string) ++ append
+        String.left (howLong - String.length append) string ++ append
 
 
 {-| Truncate the string at the specified length if the string is
@@ -592,13 +597,14 @@ softEllipsis : Int -> String -> String
 softEllipsis howLong string =
     if String.length string <= howLong then
         string
+
     else
         string
             |> Regex.find (AtMost 1) (softBreakRegexp howLong)
             |> List.map .match
             |> String.join ""
             |> Regex.replace All (regex "([\\.,;:\\s])+$") (always "")
-            |> flip String.append "..."
+            |> (\a -> String.append a "...")
 
 
 {-| Convert a list of strings into a human-readable list.
@@ -688,8 +694,9 @@ pluralize : String -> String -> number -> String
 pluralize singular plural count =
     if count == 1 then
         "1 " ++ singular
+
     else
-        (toString count) ++ " " ++ plural
+        toString count ++ " " ++ plural
 
 
 {-| Search a string from left to right for a pattern and return a substring
@@ -701,7 +708,7 @@ consisting of the characters in the string that are to the right of the pattern.
 rightOf : String -> String -> String
 rightOf pattern string =
     string
-        |> Regex.find (AtMost 1) (regex <| (escape pattern) ++ "(.*)$")
+        |> Regex.find (AtMost 1) (regex <| escape pattern ++ "(.*)$")
         |> List.map (.submatches >> firstResult)
         |> String.join ""
 
@@ -715,7 +722,7 @@ consisting of the characters in the string that are to the left of the pattern.
 leftOf : String -> String -> String
 leftOf pattern string =
     string
-        |> Regex.find (AtMost 1) (regex <| "^(.*?)" ++ (escape pattern))
+        |> Regex.find (AtMost 1) (regex <| "^(.*?)" ++ escape pattern)
         |> List.map (.submatches >> firstResult)
         |> String.join ""
 
@@ -750,7 +757,7 @@ rightOfBack pattern string =
         |> String.indexes pattern
         |> List.reverse
         |> List.head
-        |> Maybe.map ((+) (String.length pattern) >> flip String.dropLeft string)
+        |> Maybe.map ((+) (String.length pattern) >> (\a -> String.dropLeft a string))
         |> Maybe.withDefault ""
 
 
@@ -766,7 +773,7 @@ leftOfBack pattern string =
         |> String.indexes pattern
         |> List.reverse
         |> List.head
-        |> Maybe.map (flip String.left string)
+        |> Maybe.map (\a -> String.left a string)
         |> Maybe.withDefault ""
 
 
@@ -848,6 +855,7 @@ toCodePoints string =
                         -- UTF-32 code point), use it as is and continue with
                         -- remaining code units
                         combineAndReverse afterFirst (first :: accumulated)
+
                     else if first >= 0xD800 && first <= 0xDBFF then
                         -- First code unit is a leading surrogate
                         case afterFirst of
@@ -871,9 +879,10 @@ toCodePoints string =
                                                 + ((first - 0xD800) * 1024)
                                                 + (second - 0xDC00)
                                     in
-                                        -- Continue with following code units
-                                        combineAndReverse afterSecond
-                                            (codePoint :: accumulated)
+                                    -- Continue with following code units
+                                    combineAndReverse afterSecond
+                                        (codePoint :: accumulated)
+
                                 else
                                     -- Should never happen - second code unit
                                     -- is not a valid trailing surrogate,
@@ -885,11 +894,13 @@ toCodePoints string =
                                     -- don't skip it)
                                     combineAndReverse afterFirst
                                         (replacementCodePoint :: accumulated)
+
                     else if first >= 0xE000 && first <= 0xFFFF then
                         -- First code unit is in BMP (and is therefore a valid
                         -- UTF-32 code point), use it as is and continue with
                         -- remaining code units
                         combineAndReverse afterFirst (first :: accumulated)
+
                     else
                         -- Should never happen - first code unit is invalid,
                         -- replace it with the replacement character and
@@ -900,7 +911,7 @@ toCodePoints string =
         allCodeUnits =
             List.map Char.toCode (String.toList string)
     in
-        List.reverse (combineAndReverse allCodeUnits [])
+    List.reverse (combineAndReverse allCodeUnits [])
 
 
 {-| Convert a list of UTF-32 code points into a string. Inverse of
@@ -938,6 +949,7 @@ fromCodePoints allCodePoints =
                         -- Code point is valid UTF-16 code unit, use it as is
                         -- and continue with remaining code points
                         splitAndReverse rest (codePoint :: accumulated)
+
                     else if codePoint >= 0x00010000 && codePoint <= 0x0010FFFF then
                         -- Code point must be split into a surrogate pair of
                         -- UTF-16 code units
@@ -946,17 +958,19 @@ fromCodePoints allCodePoints =
                                 codePoint - 0x00010000
 
                             leading =
-                                (Bitwise.shiftRightBy 10 subtracted) + 0xD800
+                                Bitwise.shiftRightBy 10 subtracted + 0xD800
 
                             trailing =
-                                (Bitwise.and subtracted 1023) + 0xDC00
+                                Bitwise.and subtracted 1023 + 0xDC00
                         in
-                            splitAndReverse rest
-                                (trailing :: leading :: accumulated)
+                        splitAndReverse rest
+                            (trailing :: leading :: accumulated)
+
                     else if codePoint >= 0xE000 && codePoint <= 0xFFFF then
                         -- Code point is valid UTF-16 code unit, use it as is
                         -- and continue with remaining code points
                         splitAndReverse rest (codePoint :: accumulated)
+
                     else
                         -- Should never happen - invalid code point, replace
                         -- it with the replacement character and continue with
@@ -967,7 +981,7 @@ fromCodePoints allCodePoints =
         allCodeUnits =
             List.reverse (splitAndReverse allCodePoints [])
     in
-        String.fromList (List.map Char.fromCode allCodeUnits)
+    String.fromList (List.map Char.fromCode allCodeUnits)
 
 
 {-| Convert a string to a Nothing when empty.
@@ -980,6 +994,7 @@ nonEmpty : String -> Maybe String
 nonEmpty string =
     if String.isEmpty string then
         Nothing
+
     else
         Just string
 
@@ -994,12 +1009,13 @@ removeAccents : String -> String
 removeAccents string =
     if String.isEmpty string then
         string
+
     else
         let
             do_regex_to_remove_acents ( regex, replace_character ) =
                 Regex.replace Regex.All regex (\_ -> replace_character)
         in
-            List.foldl do_regex_to_remove_acents string accentRegex
+        List.foldl do_regex_to_remove_acents string accentRegex
 
 
 {-| Create list with regex and char to replace.
@@ -1027,4 +1043,4 @@ accentRegex =
             , ( "Ý", "Y" )
             ]
     in
-        List.map (\( rule, char ) -> ( (Regex.regex rule), char )) matches
+    List.map (\( rule, char ) -> ( Regex.regex rule, char )) matches
