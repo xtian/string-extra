@@ -17,6 +17,7 @@ module String.Extra
         , isBlank
         , leftOf
         , leftOfBack
+        , nonBlank
         , nonEmpty
         , pluralize
         , quote
@@ -61,7 +62,7 @@ Functions borrowed from the Rails Inflector class
 
 ## Replace and Splice
 
-@docs replace, replaceSlice, insertAt, nonEmpty, removeAccents
+@docs replace, replaceSlice, insertAt, nonEmpty, nonBlank, removeAccents
 
 
 ## Splitting
@@ -994,6 +995,21 @@ fromCodePoints allCodePoints =
 nonEmpty : String -> Maybe String
 nonEmpty string =
     if String.isEmpty string then
+        Nothing
+
+    else
+        Just string
+
+
+{-| Convert a string to a Nothing when blank.
+
+    nonBlank "" == Nothing
+    nonBlank "Hello world" == Just "Hello world"
+
+-}
+nonBlank : String -> Maybe String
+nonBlank string =
+    if isBlank string then
         Nothing
 
     else

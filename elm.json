@@ -3,7 +3,7 @@
     "name": "xtian/string-extra",
     "summary": "String helper functions for Elm",
     "license": "BSD-3-Clause",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "exposed-modules": [
         "String.Extra"
     ],
@@ -12,5 +12,7 @@
         "elm/core": "1.0.0 <= v < 2.0.0",
         "elm/regex": "1.0.0 <= v < 2.0.0"
     },
-    "test-dependencies": {}
+    "test-dependencies": {
+        "elm-explorations/test": "1.0.0 <= v < 2.0.0"
+    }
 }
